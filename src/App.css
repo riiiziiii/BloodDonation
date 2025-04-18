@@ -1,16 +1,133 @@
 /* App.css */
-.app {
+.app-container {
   min-height: 100vh;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  background-color: #f5f5f5;
-  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fb 100%);
+  padding: 2rem;
 }
 
-/* Optional: Add these if you want to remove default margins */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.app-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.app-title {
+  color: #d32f2f;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.app-main {
+  width: 100%;
+  max-width: 800px;
+}
+
+.auth-options {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.auth-button {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-width: 150px;
+}
+
+.auth-button.primary {
+  background-color: #d32f2f;
+  color: white;
+  border: 2px solid #d32f2f;
+}
+
+.auth-button.primary:hover {
+  background-color: #b71c1c;
+  border-color: #b71c1c;
+}
+
+.auth-button.secondary {
+  background-color: transparent;
+  color: #d32f2f;
+  border: 2px solid #d32f2f;
+}
+
+.auth-button.secondary:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+}
+
+.stats-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #d32f2f;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-title {
+    font-size: 2rem;
+  }
+  
+  .auth-options {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .auth-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-title {
+    font-size: 1.8rem;
+  }
+  
+  .app-container {
+    padding: 1.5rem;
+  }
+  
+  .stats-container {
+    padding: 1.5rem;
+  }
 }

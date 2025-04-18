@@ -1,5 +1,30 @@
-import { useState } from 'react';
-import './Register.css';
+import React, { useState } from 'react';
+import { 
+  Box, 
+  Button, 
+  Container, 
+  CssBaseline, 
+  Typography, 
+  TextField, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
+  ToggleButton, 
+  ToggleButtonGroup,
+  Paper
+} from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#d32f2f',
+    },
+  },
+});
+
+const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,11 +33,8 @@ const Register = () => {
     email: '',
     city: '',
     bloodGroup: '',
-    contactNo: '',
     password: ''
   });
-
-  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +44,15 @@ const Register = () => {
     }));
   };
 
+  const handleRoleChange = (event, newRole) => {
+    if (newRole !== null) {
+      setFormData(prev => ({
+        ...prev,
+        role: newRole
+      }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
@@ -29,113 +60,111 @@ const Register = () => {
   };
 
   return (
-    <div className="register-container">
-      <h2>BLOOD DONATION REGISTRATION</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>I WANT TO REGISTER AS:</label>
-          <select 
-            name="role" 
-            value={formData.role}
-            onChange={handleChange}
-            className="form-control"
-          >
-            <option value="donor">Donor (Most Needed)</option>
-            <option value="recipient">Recipient</option>
-          </select>
-        </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="sm">
+        <Box sx={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          py: 4
+        }}>
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+            <Typography variant="h4" component="h1" align="center" color="primary" gutterBottom>
+              Register
+            </Typography>
 
-        <div className="form-group">
-          <label>FULL NAME</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Enter your full name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+              <FormControl fullWidth sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  I want to register as:
+                </Typography>
+                <ToggleButtonGroup
+                  color="primary"
+                  value={formData.role}
+                  exclusive
+                  onChange={handleRoleChange}
+                  fullWidth
+                >
+                  <ToggleButton value="donor">Donor</ToggleButton>
+                  <ToggleButton value="recipient">Recipient</ToggleButton>
+                </ToggleButtonGroup>
+              </FormControl>
 
-        <div className="form-group">
-          <label>EMAIL</label>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+              />
 
-        <div className="form-group">
-          <label>CITY</label>
-          <input
-            type="text"
-            name="city"
-            placeholder="Enter your city"
-            value={formData.city}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-        <div className="form-group">
-          <label>BLOOD GROUP</label>
-          <select
-            name="bloodGroup"
-            value={formData.bloodGroup}
-            onChange={handleChange}
-            required
-            className="form-control"
-          >
-            <option value="">Select your blood group</option>
-            {bloodGroups.map(group => (
-              <option key={group} value={group}>{group}</option>
-            ))}
-          </select>
-        </div>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+              />
 
-        <div className="form-group">
-          <label>CONTACT NUMBER</label>
-          <input
-            type="tel"
-            name="contactNo"
-            placeholder="Enter your phone number"
-            value={formData.contactNo}
-            onChange={handleChange}
-            required
-            className="form-control"
-          />
-        </div>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                label="City"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+              />
 
-        <div className="form-group">
-          <label>PASSWORD</label>
-          <input
-            type="password"
-            name="password"
-            placeholder="Create a password (min 6 characters)"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength="6"
-            className="form-control"
-          />
-        </div>
+              <FormControl fullWidth margin="normal" required>
+                <InputLabel>Blood Group</InputLabel>
+                <Select
+                  name="bloodGroup"
+                  value={formData.bloodGroup}
+                  label="Blood Group"
+                  onChange={handleChange}
+                >
+                  {bloodGroups.map(group => (
+                    <MenuItem key={group} value={group}>{group}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-        <button type="submit" className="register-btn">
-          REGISTER
-        </button>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
+              >
+                Register
+              </Button>
 
-        <p className="login-link">
-          Already have an account? <a href="/login">Login</a>
-        </p>
-      </form>
-    </div>
+              <Typography variant="body2" align="center">
+                Already have an account? <Button href="/login" color="primary">Login</Button>
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
+      </Container>
+    </ThemeProvider>
   );
 };
 
