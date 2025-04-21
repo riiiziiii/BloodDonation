@@ -19,7 +19,12 @@ import {
   TableRow,
   Paper,
   Divider,
-  Avatar
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Badge
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -31,23 +36,46 @@ import PersonIcon from '@mui/icons-material/Person';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import HistoryIcon from '@mui/icons-material/History';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [formData, setFormData] = useState({
     bloodGroup: 'A',
     city: '',
     hospital: ''
   });
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    phone: '+1234567890',
+    bloodGroup: 'O+',
+    address: '123 Main St, Lahore',
+    lastDonation: '2023-01-15'
+  });
+  const [notifications, setNotifications] = useState([
+    { id: 1, message: 'Your blood donation request has been accepted', time: '2 hours ago', read: false },
+    { id: 2, message: 'New donor available in your area', time: '1 day ago', read: false },
+    { id: 3, message: 'Upcoming blood donation camp in Lahore', time: '3 days ago', read: true },
+  ]);
   const sidebarRef = useRef(null);
+  const notificationsRef = useRef(null);
 
-  // Click outside to close sidebar
+  // Click outside to close sidebar or notifications
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setSidebarOpen(false);
+      }
+      if (notificationsOpen && notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
       }
     };
 
@@ -55,7 +83,7 @@ const Dashboard = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, notificationsOpen]);
 
   const requests = [
     { bloodGroup: 'A', city: 'Lahore', hospital: 'Jinnash', status: 'Accept' },
@@ -71,10 +99,22 @@ const Dashboard = () => {
     }));
   };
 
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Request submitted:', formData);
-    // Add your request submission logic here
+  };
+
+  const handleSaveProfile = () => {
+    console.log('Profile saved:', profileData);
+    setEditMode(false);
   };
 
   const handleLogout = () => {
@@ -85,10 +125,29 @@ const Dashboard = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+    // Mark notifications as read when opened
+    if (!notificationsOpen) {
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    }
+  };
+
+  const openProfile = () => {
+    setProfileOpen(true);
+    setSidebarOpen(false);
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Backdrop when sidebar is open */}
-      {sidebarOpen && (
+      {/* Backdrop when sidebar or notifications are open */}
+      {(sidebarOpen || notificationsOpen) && (
         <Box
           sx={{
             position: 'fixed',
@@ -102,7 +161,7 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Main Sidebar */}
       <Drawer
         variant="temporary"
         open={sidebarOpen}
@@ -129,14 +188,18 @@ const Dashboard = () => {
           </Typography>
         </Box>
         
-        {/* User Profile */}
-        <Box sx={{ px: 3, py: 2, display: 'flex', alignItems: 'center' }}>
+        {/* User Profile - Clickable */}
+        <Box 
+          sx={{ px: 3, py: 2, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          onClick={openProfile}
+          className="profile-section"
+        >
           <Avatar sx={{ bgcolor: '#8a0303', mr: 2 }}>
             <PersonIcon />
           </Avatar>
           <Box>
-            <Typography variant="subtitle1" sx={{ color: '#e0e0e0' }}>John Doe</Typography>
-            <Typography variant="caption" sx={{ color: '#8a0303' }}>O+ Donor</Typography>
+            <Typography variant="subtitle1" sx={{ color: '#e0e0e0' }}>{profileData.name}</Typography>
+            <Typography variant="caption" sx={{ color: '#8a0303' }}>{profileData.bloodGroup} Donor</Typography>
           </Box>
         </Box>
         
@@ -179,9 +242,15 @@ const Dashboard = () => {
             <ListItemText primary="Donation History" sx={{ color: '#e0e0e0' }} />
           </ListItem>
           
-          <ListItem button className="menu-item">
+          <ListItem 
+            button 
+            className="menu-item" 
+            onClick={toggleNotifications}
+          >
             <ListItemIcon>
-              <NotificationsIcon sx={{ color: '#b0b0b0' }} />
+              <Badge badgeContent={unreadCount} color="error">
+                <NotificationsIcon sx={{ color: '#b0b0b0' }} />
+              </Badge>
             </ListItemIcon>
             <ListItemText primary="Notifications" sx={{ color: '#e0e0e0' }} />
           </ListItem>
@@ -206,6 +275,202 @@ const Dashboard = () => {
           </Typography>
         </Box>
       </Drawer>
+
+      {/* Notifications Sidebar */}
+      <Drawer
+        anchor="right"
+        variant="temporary"
+        open={notificationsOpen}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 350,
+            boxSizing: 'border-box',
+            backgroundColor: '#2d2d2d',
+            color: '#e0e0e0',
+          },
+        }}
+        className={`notifications-sidebar ${!notificationsOpen ? 'notifications-sidebar-closed' : ''}`}
+        ref={notificationsRef}
+      >
+        <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Notifications</Typography>
+          <Box>
+            <IconButton 
+              onClick={clearNotifications}
+              sx={{ color: '#e0e0e0' }}
+              title="Clear all notifications"
+            >
+              <ClearAllIcon />
+            </IconButton>
+            <IconButton 
+              onClick={toggleNotifications} 
+              sx={{ ml: 1, color: '#e0e0e0' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </Box>
+        
+        <Divider sx={{ backgroundColor: '#424242' }} />
+        
+        <List sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+          {notifications.length > 0 ? (
+            notifications.map((notification) => (
+              <ListItem 
+                key={notification.id} 
+                className={`notification-item ${!notification.read ? 'unread' : ''}`}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="body1">{notification.message}</Typography>
+                  <Typography variant="caption" sx={{ color: '#8a0303', display: 'block', mt: 1 }}>
+                    {notification.time}
+                  </Typography>
+                </Box>
+              </ListItem>
+            ))
+          ) : (
+            <ListItem>
+              <Typography variant="body2" sx={{ color: '#b0b0b0', fontStyle: 'italic' }}>
+                No notifications to display
+              </Typography>
+            </ListItem>
+          )}
+        </List>
+      </Drawer>
+
+      {/* Profile Dialog */}
+      <Dialog 
+        open={profileOpen} 
+        onClose={() => setProfileOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ backgroundColor: '#8a0303', color: 'white' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6">My Profile</Typography>
+            {!editMode && (
+              <IconButton 
+                onClick={() => setEditMode(true)}
+                sx={{ color: 'white' }}
+              >
+                <EditIcon />
+              </IconButton>
+            )}
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+              <Avatar sx={{ 
+                bgcolor: '#8a0303', 
+                width: 100, 
+                height: 100,
+                fontSize: '2.5rem'
+              }}>
+                {profileData.name.charAt(0)}
+              </Avatar>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Full Name"
+                name="name"
+                value={profileData.name}
+                onChange={handleProfileChange}
+                fullWidth
+                disabled={!editMode}
+              />
+              <TextField
+                label="Email"
+                name="email"
+                value={profileData.email}
+                onChange={handleProfileChange}
+                fullWidth
+                disabled={!editMode}
+              />
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Phone Number"
+                name="phone"
+                value={profileData.phone}
+                onChange={handleProfileChange}
+                fullWidth
+                disabled={!editMode}
+              />
+              <TextField
+                select
+                label="Blood Group"
+                name="bloodGroup"
+                value={profileData.bloodGroup}
+                onChange={handleProfileChange}
+                SelectProps={{
+                  native: true,
+                }}
+                fullWidth
+                disabled={!editMode}
+              >
+                {['Select','A-', 'A+', 'B-', 'B+', 'AB-', 'AB+', 'O-', 'O+'].map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </TextField>
+            </Box>
+            
+            <TextField
+              label="Address"
+              name="address"
+              value={profileData.address}
+              onChange={handleProfileChange}
+              fullWidth
+              multiline
+              rows={2}
+              disabled={!editMode}
+            />
+            
+            <TextField
+              label="Last Donation Date"
+              name="lastDonation"
+              type="date"
+              value={profileData.lastDonation}
+              onChange={handleProfileChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              disabled={!editMode}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          {editMode ? (
+            <>
+              <Button 
+                onClick={() => setEditMode(false)}
+                color="error"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveProfile}
+                variant="contained"
+                startIcon={<SaveIcon />}
+                sx={{ backgroundColor: '#8a0303', '&:hover': { backgroundColor: '#6a0000' } }}
+              >
+                Save Changes
+              </Button>
+            </>
+          ) : (
+            <Button 
+              onClick={() => setProfileOpen(false)}
+              variant="contained"
+              sx={{ backgroundColor: '#8a0303', '&:hover': { backgroundColor: '#6a0000' } }}
+            >
+              Close
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       {/* Main Content */}
       <Box 

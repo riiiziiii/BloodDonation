@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 
 const theme = createTheme({
   palette: {
@@ -50,7 +51,7 @@ const Login = () => {
       if (!formData.email || !formData.password) {
         throw new Error('Please fill in all fields');
       }
-
+      const {} =useForm()
       // In a real app, you would verify credentials with your backend here
       console.log('Login submitted:', formData);
       
