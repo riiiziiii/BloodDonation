@@ -43,6 +43,16 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Add a direct link to donor dashboard for testing */}
+        <div style={{ marginTop: '20px' }}>
+          <button 
+            onClick={()=>navigate('/donor-dashboard')}
+            className="auth-button primary"
+          >
+            View Donor Dashboard (Test)
+          </button>
+        </div>
       </main>
     </div>
   );

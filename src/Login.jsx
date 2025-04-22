@@ -7,7 +7,11 @@ import {
   Typography, 
   TextField, 
   Paper,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
@@ -22,24 +26,24 @@ const theme = createTheme({
 });
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
   const navigate = useNavigate();
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      email: '',
+      password: ''
+    }
+  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setLoading(true);
     setError('');
 
@@ -47,20 +51,44 @@ const Login = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Basic validation
-      if (!formData.email || !formData.password) {
-        throw new Error('Please fill in all fields');
-      }
-      const {} =useForm()
-      // In a real app, you would verify credentials with your backend here
-      console.log('Login submitted:', formData);
+      // In a real app, this would come from your backend
+      // For demo purposes, we'll simulate different user types
+      const email = data.email.toLowerCase();
       
-      // Redirect to dashboard on successful login
-      navigate('/dashboard');
+      let roles = [];
+      if (email.includes('donor')) roles.push('donor');
+      if (email.includes('recipient')) roles.push('recipient');
+      
+      // Default to recipient if no role detected
+      if (roles.length === 0) roles.push('recipient');
+      
+      setUserRoles(roles);
+      
+      if (roles.length === 1) {
+        // Single role - redirect directly
+        if (roles[0] === 'donor') {
+          navigate('/donor-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        // Multiple roles - show selection dialog
+        setRoleDialogOpen(true);
+      }
+      
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleSelection = (role) => {
+    setRoleDialogOpen(false);
+    if (role === 'donor') {
+      navigate('/donor-dashboard');
+    } else {
+      navigate('/dashboard');
     }
   };
 
@@ -86,18 +114,24 @@ const Login = () => {
               </Typography>
             )}
 
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 3 }}>
               <TextField
                 margin="normal"
                 required
                 fullWidth
                 label="Email"
-                name="email"
                 type="email"
                 autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
                 disabled={loading}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                {...register('email', {
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Invalid email address'
+                  }
+                })}
               />
 
               <TextField
@@ -105,12 +139,18 @@ const Login = () => {
                 required
                 fullWidth
                 label="Password"
-                name="password"
                 type="password"
                 autoComplete="current-password"
-                value={formData.password}
-                onChange={handleChange}
                 disabled={loading}
+                error={!!errors.password}
+                helperText={errors.password?.message}
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: {
+                    value: 6,
+                    message: 'Password must be at least 6 characters'
+                  }
+                })}
               />
 
               <Button
@@ -141,6 +181,38 @@ const Login = () => {
           </Paper>
         </Box>
       </Container>
+
+      {/* Role Selection Dialog */}
+      <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)}>
+        <DialogTitle>Select Your Role</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            You have multiple roles. How would you like to proceed?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
+          {userRoles.includes('donor') && (
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={() => handleRoleSelection('donor')}
+              sx={{ mx: 1 }}
+            >
+              Login as Donor
+            </Button>
+          )}
+          {userRoles.includes('recipient') && (
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={() => handleRoleSelection('recipient')}
+              sx={{ mx: 1 }}
+            >
+              Login as Recipient
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </ThemeProvider>
   );
 };
