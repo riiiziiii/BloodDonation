@@ -130,6 +130,16 @@ const DonorDashboard = () => {
     { id: 3, message: 'Thank you for your recent donation', time: '1 week ago', read: true },
   ]);
 
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  // Toggle notifications function
+  const toggleNotifications = () => {
+    setNotificationsOpen(!notificationsOpen);
+  };
+
   // Check if donor is eligible to donate (minimum 1 month since last donation)
   const isEligibleToDonate = () => {
     const lastDonationDate = new Date(profileData.lastDonation);
@@ -184,7 +194,42 @@ const DonorDashboard = () => {
     }
   };
 
-  // ... (keep all other existing functions like handleProfileChange, handleSaveProfile, etc.)
+  // Handle profile change
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle save profile
+  const handleSaveProfile = () => {
+    setEditMode(false);
+    // Here you would typically send the updated data to your backend
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    navigate('/');
+  };
+
+  // Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setSidebarOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -200,6 +245,10 @@ const DonorDashboard = () => {
             backgroundColor: 'rgba(0,0,0,0.5)',
             zIndex: 1199,
           }}
+          onClick={() => {
+            setSidebarOpen(false);
+            setNotificationsOpen(false);
+          }}
         />
       )}
 
@@ -207,16 +256,57 @@ const DonorDashboard = () => {
       <Drawer
         variant="temporary"
         open={sidebarOpen}
+        onClose={toggleSidebar}
         sx={{
           '& .MuiDrawer-paper': { 
             width: 280,
             boxSizing: 'border-box',
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#FFD2DC',
           },
         }}
         ref={sidebarRef}
       >
-        {/* ... (keep existing sidebar code) ... */}
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" sx={{ color: 'black' }}>BLOODLIFE</Typography>
+          <IconButton onClick={toggleSidebar} sx={{ color: 'black' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Divider sx={{ borderColor: '#444' }} />
+        <List>
+          <ListItem button>
+            <ListItemIcon sx={{ color: 'black' }}>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItem>
+          <ListItem button onClick={() => setProfileDialogOpen(true)}>
+            <ListItemIcon sx={{ color: 'black' }}>
+              <PersonIcon />
+            </ListItemIcon>
+            <ListItemText primary="Profile" />
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon sx={{ color: 'black' }}>
+              <HistoryIcon />
+            </ListItemIcon>
+            <ListItemText primary="Donation History" />
+          </ListItem>
+          <ListItem button onClick={toggleNotifications}>
+            <ListItemIcon sx={{ color: 'black' }}>
+              <Badge badgeContent={notifications.filter(n => !n.read).length} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </ListItemIcon>
+            <ListItemText primary="Notifications" />
+          </ListItem>
+          <ListItem button onClick={handleLogout}>
+            <ListItemIcon sx={{ color: 'black' }}>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItem>
+        </List>
       </Drawer>
 
       {/* Notifications Sidebar */}
@@ -224,17 +314,41 @@ const DonorDashboard = () => {
         anchor="right"
         variant="temporary"
         open={notificationsOpen}
+        onClose={toggleNotifications}
         sx={{
           '& .MuiDrawer-paper': {
             width: 350,
             boxSizing: 'border-box',
-            backgroundColor: '#2d2d2d',
-            color: '#e0e0e0',
+            backgroundColor: '#FFD2DC',
+            color: 'black',
           },
         }}
         ref={notificationsRef}
       >
-        {/* ... (keep existing notifications code) ... */}
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">Notifications</Typography>
+          <IconButton onClick={toggleNotifications} sx={{ color: 'black' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Divider sx={{ borderColor: '#444' }} />
+        <List>
+          {notifications.map((notification) => (
+            <ListItem 
+              key={notification.id} 
+              sx={{ 
+                backgroundColor: notification.read ? 'inherit' : 'rgba(138, 3, 3, 0.2)',
+                borderLeft: notification.read ? 'none' : '4px solid #8a0303'
+              }}
+            >
+              <ListItemText
+                primary={notification.message}
+                secondary={notification.time}
+                sx={{ color: 'black' }}
+              />
+            </ListItem>
+          ))}
+        </List>
       </Drawer>
 
       {/* Profile Dialog */}
@@ -244,7 +358,106 @@ const DonorDashboard = () => {
         maxWidth="sm"
         fullWidth
       >
-        {/* ... (keep existing profile dialog code) ... */}
+        <DialogTitle sx={{ backgroundColor: '#8a0303', color: 'white' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography>Your Profile</Typography>
+            {editMode ? (
+              <IconButton onClick={handleSaveProfile} sx={{ color: 'white' }}>
+                <SaveIcon />
+              </IconButton>
+            ) : (
+              <IconButton onClick={() => setEditMode(true)} sx={{ color: 'white' }}>
+                <EditIcon />
+              </IconButton>
+            )}
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ py: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Avatar sx={{ width: 100, height: 100, backgroundColor: '#8a0303' }}>
+                {profileData.name.charAt(0)}
+              </Avatar>
+            </Box>
+            
+            <TextField
+              label="Full Name"
+              name="name"
+              value={profileData.name}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled={!editMode}
+            />
+            
+            <TextField
+              label="Email"
+              name="email"
+              value={profileData.email}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled={!editMode}
+            />
+            
+            <TextField
+              label="Phone Number"
+              name="phone"
+              value={profileData.phone}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled={!editMode}
+            />
+            
+            <Select
+              label="Blood Group"
+              name="bloodGroup"
+              value={profileData.bloodGroup}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled={!editMode}
+              sx={{ textAlign: 'left' }}
+            >
+              <MenuItem value="A+">A+</MenuItem>
+              <MenuItem value="A-">A-</MenuItem>
+              <MenuItem value="B+">B+</MenuItem>
+              <MenuItem value="B-">B-</MenuItem>
+              <MenuItem value="AB+">AB+</MenuItem>
+              <MenuItem value="AB-">AB-</MenuItem>
+              <MenuItem value="O+">O+</MenuItem>
+              <MenuItem value="O-">O-</MenuItem>
+            </Select>
+            
+            <TextField
+              label="Address"
+              name="address"
+              value={profileData.address}
+              onChange={handleProfileChange}
+              fullWidth
+              multiline
+              rows={3}
+              disabled={!editMode}
+            />
+            
+            <TextField
+              label="Last Donation Date"
+              name="lastDonation"
+              value={profileData.lastDonation}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={() => {
+              setProfileDialogOpen(false);
+              setEditMode(false);
+            }}
+            color="error"
+          >
+            Close
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Request Details Dialog */}
@@ -361,13 +574,29 @@ const DonorDashboard = () => {
           minHeight: '100vh'
         }}
       >
-        <IconButton
-          edge="start"
-          onClick={toggleSidebar}
-          sx={{ mr: 2, color: '#8a0303' }}
-        >
-          <MenuIcon />
-        </IconButton>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <IconButton
+            edge="start"
+            onClick={toggleSidebar}
+            sx={{ mr: 2, color: '#8a0303' }}
+          >
+            <MenuIcon />
+          </IconButton>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton onClick={toggleNotifications} sx={{ color: '#8a0303', mr: 2 }}>
+              <Badge badgeContent={notifications.filter(n => !n.read).length} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <Avatar 
+              onClick={() => setProfileDialogOpen(true)} 
+              sx={{ backgroundColor: '#8a0303', cursor: 'pointer' }}
+            >
+              {profileData.name.charAt(0)}
+            </Avatar>
+          </Box>
+        </Box>
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" gutterBottom sx={{ color: '#8a0303' }}>
@@ -383,13 +612,13 @@ const DonorDashboard = () => {
           <Table>
             <TableHead sx={{ backgroundColor: '#8a0303' }}>
               <TableRow>
-                <TableCell sx={{ color: 'white' }}>Blood Group</TableCell>
-                <TableCell sx={{ color: 'white' }}>Hospital</TableCell>
-                <TableCell sx={{ color: 'white' }}>City</TableCell>
-                <TableCell sx={{ color: 'white' }}>Urgency</TableCell>
-                <TableCell sx={{ color: 'white' }}>Date</TableCell>
-                <TableCell sx={{ color: 'white' }}>Status</TableCell>
-                <TableCell sx={{ color: 'white' }}>Action</TableCell>
+                <TableCell sx={{ color: 'black' }}>Blood Group</TableCell>
+                <TableCell sx={{ color: 'black' }}>Hospital</TableCell>
+                <TableCell sx={{ color: 'black' }}>City</TableCell>
+                <TableCell sx={{ color: 'black' }}>Urgency</TableCell>
+                <TableCell sx={{ color: 'black' }}>Date</TableCell>
+                <TableCell sx={{ color: 'black' }}>Status</TableCell>
+                <TableCell sx={{ color: 'black' }}>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -440,18 +669,18 @@ const DonorDashboard = () => {
         </TableContainer>
 
         {/* Quick Stats */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-          <Paper sx={{ p: 3, width: '30%', textAlign: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 3 }}>
+          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
             <Typography variant="h6">Total Donations</Typography>
             <Typography variant="h4" sx={{ color: '#8a0303' }}>12</Typography>
           </Paper>
-          <Paper sx={{ p: 3, width: '30%', textAlign: 'center' }}>
+          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
             <Typography variant="h6">Pending Requests</Typography>
             <Typography variant="h4" sx={{ color: '#8a0303' }}>
               {donorRequests.filter(req => req.status === 'Pending').length}
             </Typography>
           </Paper>
-          <Paper sx={{ p: 3, width: '30%', textAlign: 'center' }}>
+          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
             <Typography variant="h6">Next Eligible</Typography>
             <Typography variant="h4" sx={{ color: '#8a0303' }}>
               {isEligibleToDonate() ? 'Now' : getNextEligibleDate()}
