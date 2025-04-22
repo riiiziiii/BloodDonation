@@ -4,6 +4,8 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 import Register from './Register';
 import DonorDashboard from './DonorDashboard';
+import DonorHistory from './DonorHistory';
+
 
 const MainRouter = () => {
   return (
@@ -13,6 +15,7 @@ const MainRouter = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/donor-dashboard" element={<DonorDashboard />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/donor-history" element={<DonorHistory />} />
     </Routes>
   );
 };

@@ -1,0 +1,80 @@
+/* DonorHistory.css */
+
+/* Main container */
+.donor-history-container {
+    background-color: #fff5f5;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  /* Table styling */
+  .donor-history-table {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  /* Table header */
+  .donor-history-table-header {
+    background-color: #f8d7da !important;
+  }
+  
+  .donor-history-table-header .MuiTableCell-root {
+    font-weight: bold !important;
+    color: #000000 !important;
+  }
+  
+  /* Table body */
+  .donor-history-table-body .MuiTableCell-root {
+    color: #000000 !important;
+  }
+  
+  /* Status chips */
+  .donor-history-status-completed {
+    background-color: #4caf50 !important;
+    color: white !important;
+  }
+  
+  .donor-history-status-cancelled {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+  
+  /* Verified chips */
+  .donor-history-verified {
+    border-color: #4caf50 !important;
+    color: #4caf50 !important;
+  }
+  
+  .donor-history-not-verified {
+    border-color: #f44336 !important;
+    color: #f44336 !important;
+  }
+  
+  /* Stats cards */
+  .donor-history-stats-card {
+    background-color: #f8d7da !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.2s;
+  }
+  
+  .donor-history-stats-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Blood type icon */
+  .donor-history-blood-icon {
+    color: #8a0303 !important;
+    margin-right: 8px !important;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .donor-history-stats-container {
+      flex-direction: column;
+    }
+    
+    .donor-history-stats-card {
+      margin-bottom: 16px;
+    }
+  }
