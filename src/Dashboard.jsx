@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { 
   Box,
   Drawer,
@@ -11,12 +12,6 @@ import {
   Typography,
   TextField,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Divider,
   Avatar,
@@ -28,7 +23,11 @@ import {
   Chip,
   Select,
   MenuItem,
-  Alert
+  Snackbar,
+  Alert,
+  AppBar,
+  Toolbar,
+  Container
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -45,8 +44,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import WarningIcon from '@mui/icons-material/Warning';
+import CancelIcon from '@mui/icons-material/Cancel';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -55,99 +53,37 @@ const Dashboard = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [eligibilityError, setEligibilityError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
-  const [formData, setFormData] = useState({
-    bloodGroup: 'A+',
-    city: '',
-    hospital: ''
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    defaultValues: {
+      bloodGroup: 'A+',
+      city: '',
+      hospital: '',
+      urgency: 'Medium',
+      requiredBy: ''
+    }
   });
 
   const [profileData, setProfileData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
+    name: 'Recipient User',
+    email: 'recipient@example.com',
     phone: '+1234567890',
     bloodGroup: 'O+',
     address: '123 Main St, Lahore',
-    lastDonation: '2023-01-15'
+    medicalCondition: 'Chronic anemia'
   });
 
   const [notifications, setNotifications] = useState([
-    { id: 1, message: 'Your blood donation request has been accepted', time: '2 hours ago', read: false },
-    { id: 2, message: 'New donor available in your area', time: '1 day ago', read: false },
-    { id: 3, message: 'Upcoming blood donation camp in Lahore', time: '3 days ago', read: true },
-  ]);
-
-  const [requests, setRequests] = useState([
-    { 
-      id: 1,
-      bloodGroup: 'A+', 
-      city: 'Lahore', 
-      hospital: 'Jinnah Hospital', 
-      status: 'Pending',
-      urgency: 'High',
-      date: '2023-06-15',
-      recipient: {
-        name: 'John Smith',
-        age: 32,
-        condition: 'Emergency surgery',
-        contact: 'hospital@example.com',
-        requiredBy: '2023-06-20'
-      }
-    },
-    { 
-      id: 2,
-      bloodGroup: 'B-', 
-      city: 'Karachi', 
-      hospital: 'Aga Khan Hospital', 
-      status: 'Accepted',
-      urgency: 'Medium',
-      date: '2023-06-10',
-      recipient: {
-        name: 'Sarah Johnson',
-        age: 45,
-        condition: 'Chronic anemia',
-        contact: 'sarah.j@example.com',
-        requiredBy: '2023-06-25'
-      }
-    },
-    { 
-      id: 3,
-      bloodGroup: 'O+', 
-      city: 'Islamabad', 
-      hospital: 'PIMS Hospital', 
-      status: 'Completed',
-      urgency: 'Low',
-      date: '2023-06-05',
-      recipient: {
-        name: 'Michael Brown',
-        age: 28,
-        condition: 'Regular transfusion',
-        contact: 'michael.b@example.com',
-        requiredBy: '2023-06-15'
-      }
-    },
+    { id: 1, message: 'Your blood request has been received', time: '2 hours ago', read: false },
+    { id: 2, message: 'Potential donor found for your request', time: '1 day ago', read: false },
+    { id: 3, message: 'Blood donation camp near your location', time: '3 days ago', read: true },
   ]);
 
   const sidebarRef = useRef(null);
   const notificationsRef = useRef(null);
-
-  // Check if donor is eligible to donate (minimum 1 month since last donation)
-  const isEligibleToDonate = () => {
-    const lastDonationDate = new Date(profileData.lastDonation);
-    const currentDate = new Date();
-    const timeDiff = currentDate - lastDonationDate;
-    const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-    return daysDiff >= 30; // 30 days = 1 month
-  };
-
-  // Calculate next eligible donation date
-  const getNextEligibleDate = () => {
-    const lastDonationDate = new Date(profileData.lastDonation);
-    const nextDate = new Date(lastDonationDate);
-    nextDate.setDate(nextDate.getDate() + 30);
-    return nextDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-  };
 
   // Click outside to close sidebar or notifications
   useEffect(() => {
@@ -166,14 +102,6 @@ const Dashboard = () => {
     };
   }, [sidebarOpen, notificationsOpen]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -182,28 +110,31 @@ const Dashboard = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Request submitted:', formData);
-    // Add the new request to the requests array
-    const newRequest = {
-      id: requests.length + 1,
-      bloodGroup: formData.bloodGroup,
-      city: formData.city,
-      hospital: formData.hospital,
-      status: 'Pending',
-      urgency: 'Medium',
-      date: new Date().toISOString().split('T')[0],
-      recipient: {
-        name: 'Unknown',
-        age: 0,
-        condition: 'Not specified',
-        contact: 'N/A',
-        requiredBy: 'N/A'
-      }
-    };
-    setRequests([newRequest, ...requests]);
-    setFormData({ bloodGroup: 'A+', city: '', hospital: '' });
+  const onSubmit = (data) => {
+    console.log('Form submitted:', data);
+    
+    // Here you would typically make an API call to submit the request
+    // For now, we'll simulate success/error responses
+    
+    // Simulate recursive request error (same hospital within 7 days)
+    const isRecursive = Math.random() > 0.7; // 30% chance of error for demo
+    
+    if (isRecursive) {
+      setErrorMessage('You already have an active request for this hospital. Please wait 7 days before submitting another.');
+      setShowError(true);
+    } else {
+      setShowSuccess(true);
+      reset();
+      setNotifications([
+        {
+          id: Date.now(),
+          message: `New request created for ${data.bloodGroup} blood at ${data.hospital}`,
+          time: 'Just now',
+          read: false
+        },
+        ...notifications
+      ]);
+    }
   };
 
   const handleSaveProfile = () => {
@@ -236,39 +167,44 @@ const Dashboard = () => {
     setNotifications([]);
   };
 
-  const handleRespond = (request) => {
-    if (isEligibleToDonate()) {
-      // Update the request status
-      const updatedRequests = requests.map(req => 
-        req.id === request.id ? { ...req, status: 'Accepted' } : req
-      );
-      setRequests(updatedRequests);
-      
-      // Update last donation date to today
-      const today = new Date().toISOString().split('T')[0];
-      setProfileData(prev => ({ ...prev, lastDonation: today }));
-      
-      // Add notification
-      setNotifications(prev => [
-        {
-          id: Date.now(),
-          message: `You accepted request from ${request.hospital}`,
-          time: 'Just now',
-          read: false
-        },
-        ...prev
-      ]);
-      
-      setEligibilityError('');
-    } else {
-      setEligibilityError(`You can donate again after ${getNextEligibleDate()}`);
-    }
-  };
-
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {/* Navbar */}
+      <AppBar position="static" sx={{ backgroundColor: '#d32f2f', boxShadow: 'none' }}>
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton
+                edge="start"
+                onClick={toggleSidebar}
+                sx={{ mr: 2, color: 'white' }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                BloodBridge
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton onClick={toggleNotifications} sx={{ color: 'white', mr: 2 }}>
+                <Badge badgeContent={unreadCount} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <Avatar 
+                onClick={openProfile} 
+                sx={{ backgroundColor: '#ffcdd2', color: '#d32f2f', cursor: 'pointer' }}
+              >
+                {profileData.name.charAt(0)}
+              </Avatar>
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
+
       {/* Backdrop when sidebar or notifications are open */}
       {(sidebarOpen || notificationsOpen) && (
         <Box
@@ -292,48 +228,49 @@ const Dashboard = () => {
           '& .MuiDrawer-paper': { 
             width: 280,
             boxSizing: 'border-box',
-            backgroundColor: '#2d2d2d',
+            backgroundColor: '#d32f2f',
+            color: 'white',
           },
         }}
         className={`sidebar ${!sidebarOpen ? 'sidebar-closed' : ''}`}
         ref={sidebarRef}
       >
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6" sx={{ color: '#e0e0e0' }}>Donor Menu</Typography>
-          <IconButton onClick={toggleSidebar} sx={{ color: '#e0e0e0' }}>
+          <Typography variant="h6">Recipient Menu</Typography>
+          <IconButton onClick={toggleSidebar} sx={{ color: 'white' }}>
             <CloseIcon />
           </IconButton>
         </Box>
-        <Divider sx={{ borderColor: '#444' }} />
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
         <List>
-          <ListItem button>
-            <ListItemIcon sx={{ color: '#e0e0e0' }}>
+          <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemIcon sx={{ color: 'white' }}>
               <HomeIcon />
             </ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItem>
-          <ListItem button onClick={openProfile}>
-            <ListItemIcon sx={{ color: '#e0e0e0' }}>
+          <ListItem button onClick={openProfile} sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemIcon sx={{ color: 'white' }}>
               <PersonIcon />
             </ListItemIcon>
             <ListItemText primary="Profile" />
           </ListItem>
-          <ListItem button>
-            <ListItemIcon sx={{ color: '#e0e0e0' }}>
-              <HistoryIcon />
+          <ListItem button sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemIcon sx={{ color: 'white' }}>
+              <RequestQuoteIcon />
             </ListItemIcon>
-            <ListItemText primary="Donation History" />
+            <ListItemText primary="My Requests" />
           </ListItem>
-          <ListItem button onClick={toggleNotifications}>
-            <ListItemIcon sx={{ color: '#e0e0e0' }}>
+          <ListItem button onClick={toggleNotifications} sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemIcon sx={{ color: 'white' }}>
               <Badge badgeContent={unreadCount} color="error">
                 <NotificationsIcon />
               </Badge>
             </ListItemIcon>
             <ListItemText primary="Notifications" />
           </ListItem>
-          <ListItem button onClick={handleLogout}>
-            <ListItemIcon sx={{ color: '#e0e0e0' }}>
+          <ListItem button onClick={handleLogout} sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}>
+            <ListItemIcon sx={{ color: 'white' }}>
               <LogoutIcon />
             </ListItemIcon>
             <ListItemText primary="Logout" />
@@ -350,8 +287,8 @@ const Dashboard = () => {
           '& .MuiDrawer-paper': {
             width: 350,
             boxSizing: 'border-box',
-            backgroundColor: '#2d2d2d',
-            color: '#e0e0e0',
+            backgroundColor: '#d32f2f',
+            color: 'white',
           },
         }}
         className={`notifications-sidebar ${!notificationsOpen ? 'notifications-sidebar-closed' : ''}`}
@@ -362,21 +299,21 @@ const Dashboard = () => {
           <Box>
             <IconButton 
               onClick={clearNotifications}
-              sx={{ color: '#e0e0e0' }}
+              sx={{ color: 'white' }}
               title="Clear all notifications"
             >
               <ClearAllIcon />
             </IconButton>
             <IconButton 
               onClick={toggleNotifications} 
-              sx={{ ml: 1, color: '#e0e0e0' }}
+              sx={{ ml: 1, color: 'white' }}
             >
               <CloseIcon />
             </IconButton>
           </Box>
         </Box>
         
-        <Divider sx={{ borderColor: '#424242' }} />
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
         
         <List sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
           {notifications.length > 0 ? (
@@ -384,20 +321,22 @@ const Dashboard = () => {
               <ListItem 
                 key={notification.id} 
                 sx={{ 
-                  backgroundColor: notification.read ? 'inherit' : 'rgba(138, 3, 3, 0.2)',
-                  borderLeft: notification.read ? 'none' : '4px solid #8a0303'
+                  backgroundColor: notification.read ? 'inherit' : 'rgba(255,255,255,0.1)',
+                  borderLeft: notification.read ? 'none' : '4px solid #ffcdd2',
+                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.15)' }
                 }}
               >
                 <ListItemText
                   primary={notification.message}
                   secondary={notification.time}
-                  sx={{ color: '#e0e0e0' }}
+                  sx={{ color: 'white' }}
+                  secondaryTypographyProps={{ color: 'rgba(255,255,255,0.7)' }}
                 />
               </ListItem>
             ))
           ) : (
             <ListItem>
-              <Typography variant="body2" sx={{ color: '#b0b0b0', fontStyle: 'italic' }}>
+              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'rgba(255,255,255,0.7)' }}>
                 No notifications to display
               </Typography>
             </ListItem>
@@ -411,10 +350,11 @@ const Dashboard = () => {
         onClose={() => setProfileOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{ sx: { borderRadius: '12px' } }}
       >
-        <DialogTitle sx={{ backgroundColor: '#8a0303', color: 'white' }}>
+        <DialogTitle sx={{ backgroundColor: '#d32f2f', color: 'white' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography>Your Profile</Typography>
+            <Typography>Recipient Profile</Typography>
             {editMode ? (
               <IconButton onClick={handleSaveProfile} sx={{ color: 'white' }}>
                 <SaveIcon />
@@ -429,7 +369,7 @@ const Dashboard = () => {
         <DialogContent sx={{ py: 3 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <Avatar sx={{ width: 100, height: 100, backgroundColor: '#8a0303' }}>
+              <Avatar sx={{ width: 100, height: 100, backgroundColor: '#ffcdd2', color: '#d32f2f' }}>
                 {profileData.name.charAt(0)}
               </Avatar>
             </Box>
@@ -441,6 +381,8 @@ const Dashboard = () => {
               onChange={handleProfileChange}
               fullWidth
               disabled={!editMode}
+              variant="outlined"
+              size="small"
             />
             
             <TextField
@@ -450,6 +392,8 @@ const Dashboard = () => {
               onChange={handleProfileChange}
               fullWidth
               disabled={!editMode}
+              variant="outlined"
+              size="small"
             />
             
             <TextField
@@ -459,6 +403,8 @@ const Dashboard = () => {
               onChange={handleProfileChange}
               fullWidth
               disabled={!editMode}
+              variant="outlined"
+              size="small"
             />
             
             <Select
@@ -468,7 +414,8 @@ const Dashboard = () => {
               onChange={handleProfileChange}
               fullWidth
               disabled={!editMode}
-              sx={{ textAlign: 'left' }}
+              variant="outlined"
+              size="small"
             >
               <MenuItem value="A+">A+</MenuItem>
               <MenuItem value="A-">A-</MenuItem>
@@ -481,6 +428,17 @@ const Dashboard = () => {
             </Select>
             
             <TextField
+              label="Medical Condition"
+              name="medicalCondition"
+              value={profileData.medicalCondition}
+              onChange={handleProfileChange}
+              fullWidth
+              disabled={!editMode}
+              variant="outlined"
+              size="small"
+            />
+            
+            <TextField
               label="Address"
               name="address"
               value={profileData.address}
@@ -489,15 +447,8 @@ const Dashboard = () => {
               multiline
               rows={3}
               disabled={!editMode}
-            />
-            
-            <TextField
-              label="Last Donation Date"
-              name="lastDonation"
-              value={profileData.lastDonation}
-              onChange={handleProfileChange}
-              fullWidth
-              disabled
+              variant="outlined"
+              size="small"
             />
           </Box>
         </DialogContent>
@@ -508,6 +459,7 @@ const Dashboard = () => {
               setEditMode(false);
             }}
             color="error"
+            variant="outlined"
           >
             Close
           </Button>
@@ -515,181 +467,164 @@ const Dashboard = () => {
       </Dialog>
 
       {/* Main Content */}
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          p: 3,
-          backgroundColor: '#fff5f5',
-          minHeight: '100vh'
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <IconButton
-            edge="start"
-            onClick={toggleSidebar}
-            sx={{ mr: 2, color: '#8a0303' }}
-          >
-            <MenuIcon />
-          </IconButton>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton onClick={toggleNotifications} sx={{ color: '#8a0303', mr: 2 }}>
-              <Badge badgeContent={unreadCount} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <Avatar 
-              onClick={openProfile} 
-              sx={{ backgroundColor: '#8a0303', cursor: 'pointer' }}
-            >
-              {profileData.name.charAt(0)}
-            </Avatar>
-          </Box>
-        </Box>
-
+      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ color: '#8a0303' }}>
-            Blood Requests
+          <Typography variant="h4" gutterBottom sx={{ color: '#d32f2f', fontWeight: 'bold' }}>
+            Request Blood
           </Typography>
-          <Typography variant="subtitle1" gutterBottom sx={{ color: '#8a0303', opacity: 0.8 }}>
-            Recent blood requests in your area
+          <Typography variant="subtitle1" gutterBottom sx={{ color: 'text.secondary' }}>
+            Fill out the form below to request blood donation
           </Typography>
         </Box>
 
         {/* Request Form */}
-        <Paper sx={{ p: 3, mb: 4, borderLeft: '4px solid #8a0303' }}>
-          <Typography variant="h6" gutterBottom sx={{ color: '#8a0303' }}>
-            Post New Request
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <Select
-                label="Blood Group"
-                name="bloodGroup"
-                value={formData.bloodGroup}
-                onChange={handleChange}
-                sx={{ minWidth: 120 }}
-              >
-                <MenuItem value="A+">A+</MenuItem>
-                <MenuItem value="A-">A-</MenuItem>
-                <MenuItem value="B+">B+</MenuItem>
-                <MenuItem value="B-">B-</MenuItem>
-                <MenuItem value="AB+">AB+</MenuItem>
-                <MenuItem value="AB-">AB-</MenuItem>
-                <MenuItem value="O+">O+</MenuItem>
-                <MenuItem value="O-">O-</MenuItem>
-              </Select>
+        <Paper sx={{ 
+          p: 4, 
+          mb: 4, 
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+        }}>
+          <Box 
+            component="form" 
+            onSubmit={handleSubmit(onSubmit)}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+          >
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: 1, minWidth: '200px' }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Blood Group
+                </Typography>
+                <Select
+                  {...register("bloodGroup", { required: true })}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                >
+                  <MenuItem value="A+">A+</MenuItem>
+                  <MenuItem value="A-">A-</MenuItem>
+                  <MenuItem value="B+">B+</MenuItem>
+                  <MenuItem value="B-">B-</MenuItem>
+                  <MenuItem value="AB+">AB+</MenuItem>
+                  <MenuItem value="AB-">AB-</MenuItem>
+                  <MenuItem value="O+">O+</MenuItem>
+                  <MenuItem value="O-">O-</MenuItem>
+                </Select>
+              </Box>
+              
+              <Box sx={{ flex: 1, minWidth: '200px' }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
+                  City
+                </Typography>
+                <TextField
+                  {...register("city", { required: "City is required" })}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  error={!!errors.city}
+                  helperText={errors.city?.message}
+                />
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: 1, minWidth: '200px' }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Hospital
+                </Typography>
+                <TextField
+                  {...register("hospital", { required: "Hospital is required" })}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                  error={!!errors.hospital}
+                  helperText={errors.hospital?.message}
+                />
+              </Box>
+              
+              <Box sx={{ flex: 1, minWidth: '200px' }}>
+                <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Urgency
+                </Typography>
+                <Select
+                  {...register("urgency", { required: true })}
+                  fullWidth
+                  size="small"
+                  variant="outlined"
+                >
+                  <MenuItem value="High">High</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="Low">Low</MenuItem>
+                </Select>
+              </Box>
+            </Box>
+            
+            <Box sx={{ width: '100%', maxWidth: '400px' }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
+                Required By Date
+              </Typography>
               <TextField
-                label="City"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Lahore"
+                {...register("requiredBy", { required: "Date is required" })}
+                type="date"
                 fullWidth
-              />
-              <TextField
-                label="Hospital"
-                name="hospital"
-                value={formData.hospital}
-                onChange={handleChange}
-                fullWidth
+                size="small"
+                variant="outlined"
+                InputLabelProps={{ shrink: true }}
+                error={!!errors.requiredBy}
+                helperText={errors.requiredBy?.message}
               />
             </Box>
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ 
-                backgroundColor: '#8a0303',
-                '&:hover': { backgroundColor: '#6a0000' }
-              }}
-            >
-              Submit Request
-            </Button>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                sx={{ 
+                  backgroundColor: '#d32f2f',
+                  '&:hover': { backgroundColor: '#b71c1c' },
+                  px: 4,
+                  borderRadius: '8px'
+                }}
+                startIcon={<BloodtypeIcon />}
+              >
+                Submit Request
+              </Button>
+            </Box>
           </Box>
         </Paper>
+      </Container>
 
-        {/* Requests Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#8a0303' }}>
-              <TableRow>
-                <TableCell sx={{ color: 'white' }}>Blood Group</TableCell>
-                <TableCell sx={{ color: 'white' }}>Hospital</TableCell>
-                <TableCell sx={{ color: 'white' }}>City</TableCell>
-                <TableCell sx={{ color: 'white' }}>Urgency</TableCell>
-                <TableCell sx={{ color: 'white' }}>Date</TableCell>
-                <TableCell sx={{ color: 'white' }}>Status</TableCell>
-                <TableCell sx={{ color: 'white' }}>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {requests.map((request) => (
-                <TableRow key={request.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BloodtypeIcon sx={{ color: '#8a0303', mr: 1 }} />
-                      {request.bloodGroup}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{request.hospital}</TableCell>
-                  <TableCell>{request.city}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={request.urgency} 
-                      color={
-                        request.urgency === 'High' ? 'error' : 
-                        request.urgency === 'Medium' ? 'warning' : 'success'
-                      } 
-                      size="small" 
-                    />
-                  </TableCell>
-                  <TableCell>{request.date}</TableCell>
-                  <TableCell>
-                    {request.status === 'Pending' && <Chip icon={<ScheduleIcon />} label="Pending" color="warning" size="small" />}
-                    {request.status === 'Accepted' && <Chip icon={<CheckCircleIcon />} label="Accepted" color="success" size="small" />}
-                    {request.status === 'Completed' && <Chip icon={<CheckCircleIcon />} label="Completed" color="primary" size="small" />}
-                  </TableCell>
-                  <TableCell>
-                    {request.status === 'Pending' ? (
-                      <Button 
-                        variant="outlined" 
-                        color="primary" 
-                        size="small"
-                        onClick={() => handleRespond(request)}
-                      >
-                        Respond
-                      </Button>
-                    ) : (
-                      <Typography variant="body2">{request.status}</Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      {/* Success Snackbar */}
+      <Snackbar
+        open={showSuccess}
+        autoHideDuration={6000}
+        onClose={() => setShowSuccess(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setShowSuccess(false)} 
+          severity="success" 
+          sx={{ width: '100%' }}
+        >
+          Your blood request has been submitted successfully!
+        </Alert>
+      </Snackbar>
 
-        {/* Quick Stats */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 3 }}>
-          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
-            <Typography variant="h6">Total Requests</Typography>
-            <Typography variant="h4" sx={{ color: '#8a0303' }}>{requests.length}</Typography>
-          </Paper>
-          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
-            <Typography variant="h6">Pending Requests</Typography>
-            <Typography variant="h4" sx={{ color: '#8a0303' }}>
-              {requests.filter(req => req.status === 'Pending').length}
-            </Typography>
-          </Paper>
-          <Paper sx={{ p: 3, flex: 1, textAlign: 'center' }}>
-            <Typography variant="h6">Next Eligible</Typography>
-            <Typography variant="h4" sx={{ color: '#8a0303' }}>
-              {isEligibleToDonate() ? 'Now' : getNextEligibleDate()}
-            </Typography>
-          </Paper>
-        </Box>
-      </Box>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={showError}
+        autoHideDuration={6000}
+        onClose={() => setShowError(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setShowError(false)} 
+          severity="error" 
+          sx={{ width: '100%' }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
