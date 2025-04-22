@@ -214,6 +214,10 @@ const DonorDashboard = () => {
   const handleLogout = () => {
     navigate('/');
   };
+  
+  const handleToggle =()=>{
+    navigate('/DonorHistory');
+  }
 
   // Close sidebar when clicking outside
   useEffect(() => {
