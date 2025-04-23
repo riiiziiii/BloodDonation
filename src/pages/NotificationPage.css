@@ -1,0 +1,36 @@
+.notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .notifications-list {
+    margin-top: 2rem;
+  }
+  
+  .notification-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .notification-item.unread {
+    border-left: 4px solid #d32f2f;
+  }
+  
+  .notification-item p {
+    margin: 0 0 0.5rem 0;
+  }
+  
+  .notification-item small {
+    color: #666;
+    font-size: 0.8rem;
+  }
+  
+  .no-notifications {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
