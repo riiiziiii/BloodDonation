@@ -23,6 +23,7 @@ export const getAllMatchingRequests = async () => {
   return response.data;
 };
 
+
 export const acceptRequest = async (requestId) => {
   try {
     const response = await axios.patch(
@@ -32,7 +33,7 @@ export const acceptRequest = async (requestId) => {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // If using token auth
+          //'Authorization': `Bearer ${localStorage.getItem('token')}` // If using token auth
         }
       }
     );

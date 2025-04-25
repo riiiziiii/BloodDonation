@@ -16,21 +16,12 @@ const LoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+  
     try {
-      const response = await loginUser(email, password);
-      console.log('Login response:', response);
-      
-      if (response.success) {
-        // Update auth context
-        setUser(response.user);
-        
-        // Redirect based on role
-        const redirectPath = response.user.role === 'Donor' 
-          ? '/donor-dashboard' 
-          : '/recipient-dashboard';
-        
-        navigate(redirectPath);
+      const userData = await loginUser(email, password);
+      console.log(userData)
+      if(userData){
+        navigate(userData.role === 'Donor' ? '/donor-dashboard' : '/recipient-dashboard');
       }
     } catch (err) {
       const serverError = err.response?.data?.message;
@@ -43,6 +34,8 @@ const LoginForm = () => {
       } else {
         setError('Login failed. Please try again later.');
       }
+      
+      console.error('Login failed:', err.response?.data || err.message);
     } finally {
       setIsLoading(false);
     }

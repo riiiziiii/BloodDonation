@@ -1,21 +1,42 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useRequests } from '../../hooks/useRequests';
+import { getRequests, getAllMatchingRequests } from '../../api/requests';
 import RequestCard from '../../components/requests/RequestCard';
 import useAuth from '../../hooks/useAuth';
 import './Dashboard.css';
 
 const DonorDashboard = () => {
   const { user } = useAuth();
-  const { requests, isLoading, error, refreshRequests } = useRequests();
-  const [activeTab, setActiveTab] = useState('pending');
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
+  const [currentView, setCurrentView] = useState('pending'); // Changed from activeTab to currentView
 
-  // Filter requests based on active tab and user data
+  const fetchRequests = async (viewType) => {
+    try {
+      setIsLoading(true);
+      const data = viewType === 'pending' 
+        ? await getAllMatchingRequests()
+        : await getRequests();
+      setRequests(data);
+      setCurrentView(viewType);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests('pending');
+  }, []);
+
+  // Filter requests based on current view and user data
   const filteredRequests = useMemo(() => {
     if (!user || !user.bloodGroup) return [];
     
     return requests.filter(request => {
-      if (activeTab === 'pending') {
+      if (currentView === 'pending') {
         return (
           request.status === 'pending' && 
           request.bloodGroup === user.bloodGroup &&
@@ -23,33 +44,29 @@ const DonorDashboard = () => {
         );
       } else {
         return (
-          request.status === 'accepted' && 
+          request.status === 'accepted' &&
           request.acceptedBy === user._id
         );
       }
     });
-  }, [requests, activeTab, user, lastRefresh]);
+  }, [requests, currentView, user, lastRefresh]);
 
-  // Force refresh when tab changes
-  useEffect(() => {
-    refreshRequests();
-  }, [activeTab]);
-
-  // Calculate counts for tabs
+  // Calculate counts for views
   const requestCounts = useMemo(() => {
     if (!user) return { pending: 0, accepted: 0 };
     
-    return {
-      pending: requests.filter(r => 
-        r.status === 'pending' && 
-        r.bloodGroup === user.bloodGroup &&
-        r.city === user.city
-      ).length,
-      accepted: requests.filter(r => 
-        r.status === 'accepted' && 
-        r.acceptedBy === user._id
-      ).length
-    };
+    const pendingCount = requests.filter(r => 
+      r.status === 'pending' && 
+      r.bloodGroup === user.bloodGroup &&
+      r.city === user.city
+    ).length;
+
+    const acceptedCount = requests.filter(r => 
+      r.status === 'accepted' &&
+      r.acceptedBy === user._id
+    ).length;
+
+    return { pending: pendingCount, accepted: acceptedCount };
   }, [requests, user]);
 
   if (error) {
@@ -61,7 +78,7 @@ const DonorDashboard = () => {
           <button 
             className="retry-button"
             onClick={() => {
-              refreshRequests();
+              fetchRequests(currentView);
               setLastRefresh(Date.now());
             }}
           >
@@ -84,14 +101,14 @@ const DonorDashboard = () => {
         <h1>Donor Dashboard</h1>
         <div className="tabs">
           <button 
-            className={activeTab === 'pending' ? 'active' : ''}
-            onClick={() => setActiveTab('pending')}
+            className={currentView === 'pending' ? 'active' : ''}
+            onClick={() => fetchRequests('pending')}
           >
             New Requests ({requestCounts.pending})
           </button>
           <button 
-            className={activeTab === 'accepted' ? 'active' : ''}
-            onClick={() => setActiveTab('accepted')}
+            className={currentView === 'accepted' ? 'active' : ''} 
+            onClick={() => fetchRequests('accepted')}
           >
             Accepted Requests ({requestCounts.accepted})
           </button>
@@ -103,10 +120,16 @@ const DonorDashboard = () => {
           <div className="loading-spinner">Loading requests...</div>
         ) : filteredRequests.length === 0 ? (
           <div className="no-requests-message">
-            <p>No {activeTab} requests found</p>
-            {activeTab === 'pending' && user?.bloodGroup && (
+            <p>No {currentView} requests found</p>
+            {currentView === 'pending' ? (
               <p className="info-text">
-                There are currently no pending requests matching your blood group ({user.bloodGroup}) in {user.city}.
+                {user?.bloodGroup 
+                  ? `No pending requests for blood group ${user.bloodGroup} in ${user.city}`
+                  : 'Please complete your profile to see requests'}
+              </p>
+            ) : (
+              <p className="info-text">
+                You haven't accepted any requests yet
               </p>
             )}
           </div>
@@ -116,10 +139,10 @@ const DonorDashboard = () => {
               key={request._id} 
               request={request} 
               refreshRequests={() => {
-                refreshRequests();
+                fetchRequests(currentView);
                 setLastRefresh(Date.now());
               }}
-              showActions={activeTab === 'pending'}
+              showActions={currentView === 'pending'}
             />
           ))
         )}
