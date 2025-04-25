@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import useAuth from "../../hooks/useAuth";
 import { updateProfile } from '../../api/users';
 import './ProfilePage.css';
 

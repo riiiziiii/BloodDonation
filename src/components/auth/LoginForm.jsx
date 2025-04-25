@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../api/auth';
 import useAuth from '../../hooks/useAuth';
-import './AuthForms.css'; // Shared styling for auth forms
+import './AuthForms.css';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -16,13 +16,33 @@ const LoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
+    
     try {
-      const userData = await loginUser(email, password);
-      setUser(userData);
-      navigate(userData.role === 'Donor' ? '/donor-dashboard' : '/recipient-dashboard');
+      const response = await loginUser(email, password);
+      console.log('Login response:', response);
+      
+      if (response.success) {
+        // Update auth context
+        setUser(response.user);
+        
+        // Redirect based on role
+        const redirectPath = response.user.role === 'Donor' 
+          ? '/donor-dashboard' 
+          : '/recipient-dashboard';
+        
+        navigate(redirectPath);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      const serverError = err.response?.data?.message;
+      const status = err.response?.status;
+      
+      if (status === 401) {
+        setError('Invalid email or password');
+      } else if (serverError) {
+        setError(serverError);
+      } else {
+        setError('Login failed. Please try again later.');
+      }
     } finally {
       setIsLoading(false);
     }

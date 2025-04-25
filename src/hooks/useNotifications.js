@@ -6,28 +6,39 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
 
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getNotifications();
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.seen).length);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      console.error('Failed to fetch notifications:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!user) return;
-
-    const fetchNotifications = async () => {
-      try {
-        const data = await getNotifications();
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.seen).length);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // Refresh every minute
-
-    return () => clearInterval(interval);
+    if (user) {
+      fetchNotifications();
+      
+      // Optional: Set up polling for new notifications
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    }
   }, [user]);
 
-  return { notifications, unreadCount, isLoading, refresh: fetchNotifications };
+  return { 
+    notifications, 
+    unreadCount, 
+    isLoading, 
+    error,
+    refresh: fetchNotifications 
+  };
 };

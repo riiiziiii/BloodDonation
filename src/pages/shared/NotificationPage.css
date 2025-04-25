@@ -1,0 +1,57 @@
+/* src/pages/shared/NotificationPage.css */
+.notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .notifications-list {
+    margin-top: 2rem;
+  }
+  
+  .notification-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .notification-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .notification-item.unread {
+    border-left: 4px solid #d32f2f;
+    background-color: #fff9f9;
+  }
+  
+  .notification-item p {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+  
+  .notification-item small {
+    color: #666;
+    font-size: 0.8rem;
+  }
+  
+  .no-notifications {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+  
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .notifications-container {
+      padding: 1rem;
+    }
+  }

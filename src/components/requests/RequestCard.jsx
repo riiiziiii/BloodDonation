@@ -1,24 +1,26 @@
-import { useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import { useState } from 'react';
 import { acceptRequest } from '../../api/requests';
+import useAuth from '../../hooks/useAuth';
 import './RequestCard.css';
 
-const RequestCard = ({ request, refreshRequests }) => {
+const RequestCard = ({ request, refreshRequests, showActions }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const [isAccepting, setIsAccepting] = useState(false);
 
   const handleAccept = async () => {
     try {
+      setIsAccepting(true);
       await acceptRequest(request._id);
-      refreshRequests();
-      navigate('/donor-dashboard');
+      refreshRequests(); // Trigger parent component refresh
     } catch (error) {
       console.error('Error accepting request:', error);
+    } finally {
+      setIsAccepting(false);
     }
   };
 
   return (
-    <div className="request-card">
+    <div className={`request-card ${request.status}`}>
       <div className="request-header">
         <h3>{request.bloodGroup} Blood Needed</h3>
         <span className={`status-badge ${request.status}`}>
@@ -32,9 +34,13 @@ const RequestCard = ({ request, refreshRequests }) => {
         <p><strong>Requested on:</strong> {new Date(request.createdAt).toLocaleString()}</p>
       </div>
 
-      {user?.role === 'Donor' && request.status === 'pending' && (
-        <button onClick={handleAccept} className="accept-button">
-          Accept Request
+      {showActions && user?.role === 'Donor' && request.status === 'pending' && (
+        <button 
+          onClick={handleAccept} 
+          className="accept-button"
+          disabled={isAccepting}
+        >
+          {isAccepting ? 'Accepting...' : 'Accept Request'}
         </button>
       )}
     </div>

@@ -1,6 +1,7 @@
+// src/App.jsx
 import { AuthProvider } from './context/AuthContext';
-import AppRouter from './router/AppRouter';
 import Header from './components/common/Header';
+import AppRouter from './router/AppRouter';
 import './App.css';
 
 function App() {

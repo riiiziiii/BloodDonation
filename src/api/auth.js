@@ -10,10 +10,22 @@ export const registerUser = async (userData) => {
 };
 
 export const loginUser = async (email, password) => {
-  const response = await axios.post(`${API_URL}/login`, { email, password }, {
-    withCredentials: true
-  });
-  return response.data;
+  try {
+    const response = await axios.post(
+      `${API_URL}/login`, 
+      { email, password },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data; // This will now include user.role
+  } catch (error) {
+    console.error('Login error:', error.response?.data);
+    throw error;
+  }
 };
 
 export const logoutUser = async () => {
@@ -25,7 +37,7 @@ export const logoutUser = async () => {
 
 export const checkAuth = async () => {
   try {
-    const response = await axios.get(`${API_URL}/users/profile`, {
+    const response = await axios.get(`${API_URL}/user/profile`, {
       withCredentials: true
     });
     return response.data;

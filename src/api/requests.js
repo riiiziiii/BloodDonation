@@ -24,10 +24,23 @@ export const getAllMatchingRequests = async () => {
 };
 
 export const acceptRequest = async (requestId) => {
-  const response = await axios.patch(`${API_URL}/request/${requestId}/accept`, {}, {
-    withCredentials: true
-  });
-  return response.data;
+  try {
+    const response = await axios.patch(
+      `${API_URL}/request/${requestId}/accept`,
+      {}, // Empty body
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // If using token auth
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error accepting request:', error.response?.data);
+    throw error;
+  }
 };
 
 export const getSingleRequest = async (requestId) => {

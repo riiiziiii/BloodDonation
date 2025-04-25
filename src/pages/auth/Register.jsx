@@ -1,5 +1,5 @@
-import RegisterForm from '../../components/auth/RegisterForm';
-import './AuthPages.css';
+import RegisterForm from '../../components/auth/RegisterForm.jsx';
+//import './AuthPages.css';
 
 const Register = () => {
   return (
