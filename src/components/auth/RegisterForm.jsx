@@ -29,7 +29,8 @@ const RegisterForm = () => {
     setError('');
 
     try {
-      await registerUser(formData);
+      const d=await registerUser(formData);
+      console.log(d);
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');

@@ -5,39 +5,29 @@ import useAuth from './useAuth';
 export const useRequests = () => {
   const [requests, setRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchRequests = async () => {
-      try {
-        setIsLoading(true);
-        const data = user.role === 'Donor' 
-          ? await getAllMatchingRequests() 
-          : await getRequests();
-        setRequests(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRequests();
-  }, [user]);
-
-  const refreshRequests = async () => {
+  const fetchRequests = async () => {
     try {
+      setIsLoading(true);
       const data = user.role === 'Donor' 
-        ? await getAllMatchingRequests() 
+        ? await getAllMatchingRequests()
         : await getRequests();
       setRequests(data);
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return { requests, isLoading, error, refreshRequests };
+  useEffect(() => {
+    if (user) fetchRequests();
+  }, [user]);
+
+  return {
+    requests,
+    isLoading,
+    refreshRequests: fetchRequests
+  };
 };

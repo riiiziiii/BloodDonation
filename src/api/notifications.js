@@ -3,10 +3,15 @@ import axios from 'axios';
 const API_URL = 'http://localhost:3000';
 
 export const getNotifications = async () => {
-  const response = await axios.get(`${API_URL}/notification`, {
-    withCredentials: true
-  });
-  return response.data;
+  try {
+    const response = await axios.get(`${API_URL}/notifications`, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    throw error;
+  }
 };
 
 export const markAsRead = async (notificationId) => {

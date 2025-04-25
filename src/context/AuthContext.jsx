@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { checkAuth } from '../api/auth';
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   useEffect(() => {
     const verifyAuth = async () => {

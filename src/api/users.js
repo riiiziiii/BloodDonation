@@ -10,7 +10,7 @@ export const getUserProfile = async () => {
 };
 
 export const updateProfile = async (userData) => {
-  const response = await axios.put(`${API_URL}/users/update`, userData, {
+  const response = await axios.put(`${API_URL}/user/update`, userData, {
     withCredentials: true
   });
   return response.data;

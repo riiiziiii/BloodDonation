@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRequests } from '../../hooks/useRequests';
 import RequestCard from '../../components/requests/RequestCard';
-import './DashboardPages.css';
+import './Dashboard.css';
 
 const RecipientDashboard = () => {
   const { requests, isLoading, refreshRequests } = useRequests();
