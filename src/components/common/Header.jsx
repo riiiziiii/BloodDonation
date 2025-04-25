@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import './Header.css';
 
@@ -25,15 +25,15 @@ const Header = () => {
         <nav className="nav-links">
           {user ? (
             <>
-              <Link to={user.role === 'Donor' ? '/donor-dashboard' : '/recipient-dashboard'}>
+              <NavLink to={user.role === 'Donor' ? '/donor-dashboard' : '/recipient-dashboard'}>
                 Dashboard
-              </Link>
-              <Link to="/notifications">
+              </NavLink>
+              <NavLink to="/notifications">
                 Notifications
-              </Link>
-              <Link to="/profile">
+              </NavLink>
+              <NavLink to="/profile">
                 Profile
-              </Link>
+              </NavLink>
               <button onClick={handleLogout} className="logout-button">
                 Logout
               </button>
