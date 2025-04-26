@@ -21,31 +21,28 @@ export const createRequest = async (requestData) => {
   return data;
 };
 
-export const getRequests = async () => {
-<<<<<<< Updated upstream
-  const response = await fetch(`${API_URL}/request/getRequest`,
-    {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      }
+const handleResponse = async (response) => {
+  const text = await response.text();
+  try {
+    const data = text ? JSON.parse(text) : {};
+    if (!response.ok) {
+      throw new Error(data.message || 'Request failed');
     }
-  )
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(data.message || 'Login failed. Please check your credentials.');
+    return data;
+  } catch (e) {
+    throw new Error(text || 'Request failed');
   }
-  const data = await response.json();
-  return data;
-=======
-  const response = await axios.get(`${API_URL}/request/getRequest`, {
-    
-    withCredentials: true
+};
+
+export const getRequests = async () => {
+  const response = await fetch(`${API_URL}/request/getRequest`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    }
   });
-  console.log(response);
-  return response.data;
->>>>>>> Stashed changes
+  return handleResponse(response);
 };
 
 export const getAllMatchingRequests = async () => {
