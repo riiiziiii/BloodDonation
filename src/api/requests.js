@@ -22,6 +22,7 @@ export const createRequest = async (requestData) => {
 };
 
 export const getRequests = async () => {
+<<<<<<< Updated upstream
   const response = await fetch(`${API_URL}/request/getRequest`,
     {
       method: "GET",
@@ -37,6 +38,14 @@ export const getRequests = async () => {
   }
   const data = await response.json();
   return data;
+=======
+  const response = await axios.get(`${API_URL}/request/getRequest`, {
+    
+    withCredentials: true
+  });
+  console.log(response);
+  return response.data;
+>>>>>>> Stashed changes
 };
 
 export const getAllMatchingRequests = async () => {
