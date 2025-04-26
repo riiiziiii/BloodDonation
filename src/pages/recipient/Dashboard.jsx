@@ -2,11 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useRequests } from '../../hooks/useRequests';
 import RequestCard from '../../components/requests/RequestCard';
-<<<<<<< Updated upstream
 import RequestForm from '../../components/requests/RequestCard';
-=======
-import RequestForm from '../../components/requests/RequestForm';
->>>>>>> Stashed changes
 import './Dashboard.css';
 
 const RecipientDashboard = () => {
