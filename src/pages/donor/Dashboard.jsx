@@ -23,7 +23,7 @@ const DonorDashboard = () => {
     } catch (err) {
       setError(err);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false);  
     }
   };
 
